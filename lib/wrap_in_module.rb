@@ -106,9 +106,9 @@ module WrapInModule
       end
     end
     
-    def to_s # :nodoc:
-      "#<#{self.class}:#{File.join(__dir, File.basename(__main_file))}>"
-    end
+    # def to_s # :nodoc:
+    #   "#<#{self.class}:#{File.join(__dir, File.basename(__main_file))}>"
+    # end
 
     module ScriptModuleMethods
       # This is so that <tt>def meth...</tt> behaves like in Ruby's top-level

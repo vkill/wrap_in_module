@@ -25,6 +25,7 @@ module WrapInModule
       
       yield self if block_given?
 
+      @__module.module_eval("class MissingFile < LoadError; end")
       @__module.module_eval do
         # The file with which the Script was instantiated.
         attr_reader :__main_file
@@ -89,8 +90,6 @@ module WrapInModule
         eval(name.to_s, __script_scope)
       end
 
-      # Raised by #load_in_module, caught by #load and #require.
-      class MissingFile < LoadError; end
 
       # Loads _file_ into this Script. Searches relative to the local dir, that is,
       # the dir of the file given in the original call to

@@ -105,11 +105,15 @@ It also looks that Joel was originally inspired by Nobu Nokada's suggestion in
 http://ruby-talk.org/62727, in a thread (started in http://ruby-talk.org/62660)
 about how to use ruby script files as specifications of objects.
 
+## Legal Information
 
+This project is licensed under the MIT license which can be seen in the
+provided LICENSE file.
 
-## Legal and Contact Information
+Copyright (c) 2012 ReachLocal, Inc.
 
-Usable under the Ruby license. Copyright (C)2004 Joel VanderWerf. Questions to
+This project was based on script.rb which is usable under the Ruby license.
+Copyright (C)2004 Joel VanderWerf. Questions to
 mailto:vjoel@users.sourceforge.net.
 
 ## Contributing

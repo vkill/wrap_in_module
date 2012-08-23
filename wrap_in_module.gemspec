@@ -14,4 +14,6 @@ Gem::Specification.new do |gem|
   gem.name          = "wrap_in_module"
   gem.require_paths = ["lib"]
   gem.version       = WrapInModule::VERSION
+
+  gem.add_development_dependency 'rspec'
 end

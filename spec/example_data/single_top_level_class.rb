@@ -1,0 +1,2 @@
+class Hoopty
+end

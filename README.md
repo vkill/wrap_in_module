@@ -2,22 +2,9 @@
 
 This is a Ruby gem I created to house the functionality to be able to wrap
 various things inside modules. The primary focus of it was to be able to load a
-ruby file in using a module as namespace for all the top level Constants,
+Ruby file in using a module as namespace for all the top level Constants,
 Methods, Classes, Modules, etc. This does the same for any sub ruby scripts
 that are required as well.
-
-I found this functionality in a ruby script, supprisingly called script.rb
-written by Joel VanderWerf released under the Ruby license in 2004. I have
-simply wrapped his script inside a gem so that this functionality can be easily
-accessed. The following is the description provided with Joel's script with my
-gem namespacing.
-
-`WrapInModule::Script` is a subclass of Module. A module which is an instance
-of the `WrapInModule::Script` class encapsulates in its scope the top-level
-methods, top-level constants, and instance variables defined in a ruby script
-file (and its dependent files) loaded by a ruby program. This allows use of
-script files to define objects that can be loaded into a program in much the
-same way that objects can be loaded from YAML or Marshal files.
 
 ## Installation
 
@@ -33,14 +20,15 @@ Or install it yourself as:
 
     $ gem install wrap_in_module
 
-## Synopsis
+## Usage:
 
 **program.rb:**
 
     require 'wrap_in_module'
-    my_script = WrapInModule::Script.load("my-script.rb")
-    p my_script::VALUE
-    my_script.run
+    module MyModule
+    WrapInModule::wrap_file(MyModule, "my-script.rb")
+    p MyModule::VALUE
+    MyModule.run
 
 **my-script.rb:**
 
@@ -53,76 +41,71 @@ Or install it yourself as:
 
     $ ruby program.rb
     [1, 2, 3]
-    #<Script:/tmp/my-script.rb> running.
 
-## Usage
+## Detailed Usage
 
-`WrapInModule::Script` modules are instantiated with
-<tt>WrapInModule::Script.new(main_file)</tt> or the alias
-<tt>WrapInModule::Script.load(main_file)</tt>. All the top-level constants and
-top-level methods that are defined in the +main_file+ and its dependent local
-files (see below) are scoped in the same Script module, and are thereby
+`WrapInModule::wrap_file(_module, file_path)` wraps the file specified by
+*file_path* under the specified *_module*.  All the top-level constants and
+top-level methods that are defined in the file at *file_path* and its dependent
+local files (see below) are scoped in the same module, and are thereby
 available to the calling program.
 
-The +main_file+ can load or require other files with +load+ and +require+, as
-usual. These methods, in the `WrapInModule::Script` context, add some behavior
-to the +Kernel+ +load+ and +require+ methods:
-<tt>WrapInModule::Script#load</tt> and <tt>WrapInModule::Script#require</tt>
-first search for files relative to the +main_file+'s dir. Files loaded in this
-way ("dependent local files") are treated like the script file itself:
-top-level definitions are added to the script module that is returned by +load+
-or +require+.
+The file located at *file_path* can load or require other files with *load* and
+*require*, as usual. These methods, in the *_module* context, add some behavior
+to the *Kernel* *load* and *require* methods: Within the *_module* context they
+first search for files relative to the *file_path*'s dir. Files loaded in this
+way ("dependent local files") are treated like the file located at *file_path*:
+top-level definitions are added to the module.
 
-Both <tt>WrapInModule::Script#load</tt> and
-<tt>WrapInModule::Script#require</tt> fall back to the Kernel versions if the
-file is not found locally. Hence, other ruby libraries can be loaded and
-required as usual, assuming their names do not conflict with local file names.
-Definitions from those files go into the usual scope (typically global). The
-normal ruby +load+ and +require+ behavior can be forced by calling
-<tt>Kernel.load</tt> and <tt>Kernel.require</tt>.
+Both *load* and *require* fall back to the Kernel versions if the file is not
+found locally. Hence, other ruby libraries can be loaded and required as usual,
+assuming their names do not conflict with local file names.  Definitions from
+those files go into the usual scope (typically global). The normal ruby *load*
+and *require* behavior can be forced by calling `Kernel.load` and
+`Kernel.require`.
 
-A `WrapInModule::Script` immitates the way the top-level ruby context works, so
-a ruby file that was originally intended to be run from the top level, defining
-top-level constants and top-level methods, can also be run as a
-`WrapInModule::Script`, and its top-level constants and top-level methods are
-wrapped in the script's scope.  The difference between this behavior and simply
-wrapping the loaded definitions in an _anonymous_ module using
-<tt>Kernel.load(main_file, true)</tt> is that the top-level methods and
-top-level constants defined in the script are accessible using the
-`WrapInModule::Script` instance.
+A `WrapInModule` wrapped file immitates the way the top-level ruby
+context works, so a ruby file that was originally intended to be run from the
+top level, defining top-level constants and top-level methods, can also be run
+as a module, and its top-level constants and top-level methods are wrapped in
+the modules scope. The difference between this behavior and simply wrapping the
+loaded definitions in an _anonymous_ module using `Kernel.load(main_file,
+true)` is that the top-level methods and top-level constants defined in the
+module are accessible using the *_module*.
 
-The top-level definitions of a `WrapInModule::Script` can be accessed after it
+The top-level definitions of a `WrapInModule` module can be accessed after it
 has been loaded, as follows:
 
-<tt>script.meth</tt>
+`module.meth`
 
-- Call a method defined using <tt>def meth</tt> or <tt>def self.meth</tt> in
-  the script file.
+- Call a method defined using `def meth` or `def self.meth` in the specified
+  file.
 
-<tt>script::K</tt>
+`module::K`
 
-- Access a class, module, or constant defined using <tt>K = val</tt> in the
-  script file.
+- Access a class, module, or constant defined using `K = val` in the specified
+  file.
 
-An "input" can be passed to the script before loading. Simply call
-`WrapInModule::Script.new` (or `WrapInModule::Script.load`) with a block. The
-block is passed a single argument, the `WrapInModule::Script` module, and
-executed before the files are loaded into the Script's scope. Setting a
-constant in this block makes the constant available to the script during
-loading. For example:
+## History
 
-    script = Script.load("my-script.rb") { |script| script::INPUT = 3 }
+This is largely based on an older script called **script.rb**  written by Joel
+VanderWerf and released under the Ruby license in 2004. I found issues with the
+way **script.rb** was doing things, specifically with respect to creating a
+module like object rather than an actual module. This caused problems with
+libraries such as ActiveModel and validations, etc. Therefore, I rewrote it to
+work with normal modules.
 
-Note that all methods defined in the script file are both instance methods of
-the module and methods of the module instance (the effect of
-<tt>Module#module_function</tt>). So <tt>include</tt>-ing a Script module in a
-class will give instances of the class all the methods and constants defined in
-the script, and they will reference the instance's instance variables,
-rather than the Script module's instance variables.
+Lots of props have to go out to Joel VanderWerf for writing **script.rb** in
+the first place. It would have taken me a lot longer to accomplish this if I
+didn't have Joel's **script.rb** ruby file to go off of.
 
-The Script class was inspired by Nobu Nokada's suggestion in
+Thanks Joel
+
+It also looks that Joel was originally inspired by Nobu Nokada's suggestion in
 http://ruby-talk.org/62727, in a thread (started in http://ruby-talk.org/62660)
 about how to use ruby script files as specifications of objects.
+
+
 
 ## Legal and Contact Information
 

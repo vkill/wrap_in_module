@@ -12,6 +12,8 @@ module WrapInModule
   # much the same way that objects can be loaded from YAML or Marshal files.
   #
   # See intro.txt[link:files/intro_txt.html] for an overview.
+  #
+  class MissingFile < LoadError; end
 
   class Script
     # Creates new Script, and loads _main_file_ in the scope of the Script. If a
@@ -25,7 +27,6 @@ module WrapInModule
       
       yield self if block_given?
 
-      @__module.module_eval("class MissingFile < LoadError; end")
       @__module.module_eval do
         # The file with which the Script was instantiated.
         attr_reader :__main_file
@@ -57,7 +58,8 @@ module WrapInModule
           # The extra line does nothing in sub-script files.
       rescue Errno::ENOENT
         if /#{__file__}$/ =~ $!.message # No extra locals in this scope.
-          raise MissingFile, $!.message
+          # raise MissingFile, $!.message
+          raise ::WrapInModule::MissingFile, $!.message
         else
           raise
         end
@@ -106,10 +108,12 @@ module WrapInModule
       # from those sub files.
       
       def load(file, wrap = false)
-        load_in_module(File.join(@__dir, file))
-        true
-      rescue MissingFile
-        super
+        begin
+          load_in_module(File.join(@__dir, file))
+          true
+        rescue ::WrapInModule::MissingFile
+          super
+        end
       end
 
       # Analogous to <tt>Kernel#require</tt>. First tries the local dir, then falls
@@ -122,15 +126,17 @@ module WrapInModule
       # extension or is not found locally.
       
       def require(feature)
-        unless @__loaded_features[feature]
-          @__loaded_features[feature] = true
-          file = File.join(@__dir, feature)
-          file += ".rb" unless /\.rb$/ =~ file
-          load_in_module(file)
+        begin
+          unless @__loaded_features[feature]
+            @__loaded_features[feature] = true
+            file = File.join(@__dir, feature)
+            file += ".rb" unless /\.rb$/ =~ file
+            load_in_module(file)
+          end
+        rescue ::WrapInModule::MissingFile
+          @__loaded_features[feature] = false
+          super
         end
-      rescue MissingFile
-        @__loaded_features[feature] = false
-        super
       end
     end
   end
